@@ -19,6 +19,7 @@ uint8_t selectedIndex = 0;
 char* currentHierarchy = "MENU";
 uint8_t maximumSelectionCt = 3;
 int remotecreationCount = 0;
+int selectedRFuncIndex = 0;
 int selectedRemoteIndex = 0;
 char* menuItems[5] = {
   "New Remote",
@@ -27,21 +28,22 @@ char* menuItems[5] = {
   "About",
   ".ND"
 };  // has to be 5, setmenuview func
-char* editRemoteMenu[5] = { "Use Remote", "Edit Remote Type", "Edit Functions", "Delete Remote", ".ND" };
+char* editRemoteMenu[5] = { "Use Remote", "Edit Remote Type", "Delete Remote", ".ND" };
 char* editRemoteType[2] = { "Infrared [ IR ]", "Radio [ RF ]" };
 char* deletionMenu[2] = { "Keep Remote", "Delete Remote" };
 char* actualEditRemoteTypes[2] = { "IR", "RF" };
+char* rFuncMenu[2] = { "Emulate Function", "Delete Function" };
 
 char* remoteNames[5] = {
   "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY "
 };
 
 char* remoteCMDS[5][5] = {
-  { ".ND", ".ND", ".ND", ".ND", ".ND" },
-  { ".ND", ".ND", ".ND", ".ND", ".ND" },
-  { ".ND", ".ND", ".ND", ".ND", ".ND" },
-  { ".ND", ".ND", ".ND", ".ND", ".ND" },
-  { ".ND", ".ND", ".ND", ".ND", ".ND" },
+  { "rIndex0", "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY "},
+  { "rIndex1", "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY "},
+  { "rIndex2", "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY "},
+  { "rIndex3", "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY "},
+  { "rIndex4", "EMPTY ", "EMPTY ", "EMPTY ", "EMPTY "},
 };
 
 char* remoteTypes[5] = {
@@ -205,6 +207,9 @@ void drawMenu(char* items[], size_t size, uint8_t selectedIndex, const char* nam
     }
   }
   drawButtons();
+  if (name=="USE"){
+    display.drawRect(0, 0, 480, 800, WHITE);
+  }
 }
 
 void setMenuView(char* spot, int index) {
@@ -223,13 +228,21 @@ void setMenuView(char* spot, int index) {
     itemCount = sizeof(editRemoteMenu) / sizeof(editRemoteMenu[0]);
     drawMenu(editRemoteMenu, itemCount, index, spot, true);
   } else if (spot == "TYPECONFIG") {
-    maximumSelectionCt = 2;
+    maximumSelectionCt = 1;
     itemCount = sizeof(editRemoteType) / sizeof(editRemoteType[0]);
     drawMenu(editRemoteType, itemCount, index, spot, false);
   } else if (spot == "DELETE") {
-    maximumSelectionCt = 2;
+    maximumSelectionCt = 1;
     itemCount = sizeof(deletionMenu) / sizeof(deletionMenu[0]);
     drawMenu(deletionMenu, itemCount, index, spot, false);
+  } else if (spot == "USE") {
+    maximumSelectionCt = 5;
+    itemCount = sizeof(remoteCMDS[selectedRemoteIndex-1]) / sizeof(remoteCMDS[selectedRemoteIndex-1][0]);
+    drawMenu(remoteCMDS[selectedRemoteIndex-1], itemCount, index, spot, true);
+  } else if (spot == "DATA") {
+    maximumSelectionCt = 2;
+    itemCount = sizeof(rFuncMenu) / sizeof(rFuncMenu[0]);
+    drawMenu(rFuncMenu, itemCount, index, spot, true);
   }
   currentHierarchy = spot;
 }
@@ -416,27 +429,30 @@ void loop() {
                 setMenuView("VIEW", selectedRemoteIndex);
                 break;
               }
+            case 1: { // use remote
+              for (uint16_t i = 0; i <= 800; i += 50) {
+                display.fillRect(0, 401-(i/2), 480, 25, BLACK);
+                display.drawRect(0, 400-(i/2), 480, i, WHITE);
+                display.fillRect(1, 374+(i/2), 479, 25, BLACK);
+                delay(3);
+              }
+              delay(5);
+              display.drawRect(0, 0, 480, 800, WHITE);
+              setMenuView("USE", 0);  
+              break;
+            }
             case 2:  // edit type
               {
                 setMenuView("TYPECONFIG", 0);
                 break;
               }
-            case 4:  // delete
+            case 3:  // delete
               {
                 setMenuView("DELETE", 0);
                 break;
               }
             default:  // other
               {
-                //setMenuView("VIEW", selectedRemoteIndex);
-                for (uint16_t i = 0; i <= 800; i += 50) { // Start at 20px, grow by 10px each iteration
-                  display.fillRect(0, 401-(i/2), 480, 25, BLACK);
-                  display.drawRect(0, 400-(i/2), 480, i, WHITE);
-                  display.fillRect(0, 374+(i/2), 480, 25, BLACK);
-                  delay(3); // Optional delay for animation effect
-                }
-                delay(100);
-                drawButtons();
                 break;
               }
           }
@@ -460,7 +476,29 @@ void loop() {
                 setMenuView("VIEW", 0);
               }
           }
+        } else if (currentHierarchy == "USE") {
+          if (selectedIndex == 0) {
+            setMenuView("EDIT", 1);
+          } else {
+            if (strcmp(remoteNames[selectedIndex - 1],"EMPTY ") != 0) { // if there's a command
+              setMenuView("DATA", selectedIndex);  
+              selectedRFuncIndex = selectedIndex;          
+            } else {
+              setMenuView("USE", selectedIndex);
+            }
+          }
+        } else if (currentHierarchy == "DATA") {
+          if (selectedIndex == 0) {
+            setMenuView("USE", 1);
+          } else if (selectedIndex == 1) {
+            popup("Remote would've/emulated here");  
+            setMenuView("DATA", selectedIndex);  
+          } else {
+            popup("Remote would've/ been deleted here");  
+            setMenuView("USE", selectedRFuncIndex);  
+          }
         }
+
       }
     }
   }
