@@ -21,13 +21,15 @@ uint8_t maximumSelectionCt = 3;
 int remotecreationCount = 0;
 int selectedRFuncIndex = 0;
 int selectedRemoteIndex = 0;
-char* menuItems[5] = {
+
+char* menuItems[6] = {
   "New Remote",
   "View Remotes",
+  "Quick Emulate",
+  "Signal Jammer",
   "Help",
-  "About",
-  ".ND"
-};  // has to be 5, setmenuview func
+  "About"
+};
 char* editRemoteMenu[5] = { "Use Remote", "Edit Remote Type", "Delete Remote", ".ND" };
 char* editRemoteType[2] = { "Infrared [ IR ]", "Radio [ RF ]" };
 char* deletionMenu[2] = { "Keep Remote", "Delete Remote" };
@@ -216,7 +218,7 @@ void setMenuView(char* spot, int index) {
   selectedIndex = index;
   size_t itemCount;
   if (spot == "MENU") {
-    maximumSelectionCt = 3;
+    maximumSelectionCt = 5;
     itemCount = sizeof(menuItems) / sizeof(menuItems[0]);
     drawMenu(menuItems, itemCount, index, spot, false);
   } else if (spot == "VIEW") {
@@ -224,7 +226,7 @@ void setMenuView(char* spot, int index) {
     itemCount = sizeof(remoteNames) / sizeof(remoteNames[0]);
     drawMenu(remoteNames, itemCount, index, spot, true);
   } else if (spot == "EDIT") {
-    maximumSelectionCt = 4;
+    maximumSelectionCt = 3;
     itemCount = sizeof(editRemoteMenu) / sizeof(editRemoteMenu[0]);
     drawMenu(editRemoteMenu, itemCount, index, spot, true);
   } else if (spot == "TYPECONFIG") {
@@ -408,8 +410,30 @@ void loop() {
                 setMenuView("VIEW", 0);
                 break;
               }
-            default:
-              Serial.println("Help / About");
+            case 2:
+            {
+              popup("Quick Emulate");  
+              setMenuView("MENU", 2); 
+              break; 
+            }
+            case 3:
+            {
+              popup("Jammers");  
+              setMenuView("MENU", 3); 
+              break; 
+            }
+            case 4:
+            {
+              popup("ask bryce");  
+              setMenuView("MENU", 4); 
+              break; 
+            }
+            case 5:
+            {
+              popup("Matterhorn_1/v0.21");  
+              setMenuView("MENU", 5); 
+              break; 
+            }
           }
         } else if (currentHierarchy == "VIEW") {
           if (selectedIndex == 0) {
@@ -494,7 +518,7 @@ void loop() {
             popup("Remote would've/emulated here");  
             setMenuView("DATA", selectedIndex);  
           } else {
-            popup("Remote would've/ been deleted here");  
+            popup("Remote would've/been deleted here");  
             setMenuView("USE", selectedRFuncIndex);  
           }
         }
